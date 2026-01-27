@@ -20,11 +20,33 @@ pipeline {
     stage('Backend - Test') {
       steps {
         dir('backend/backend') {
-          sh 'mvn -B test'
+          sh '''
+            set -e
+
+            echo "Starting MongoDB container..."
+            docker rm -f pixology-mongo >/dev/null 2>&1 || true
+            docker run -d --name pixology-mongo -p 27017:27017 mongo:7
+
+            echo "Waiting for MongoDB to be ready..."
+            for i in $(seq 1 30); do
+              if docker exec pixology-mongo mongosh --quiet --eval "db.runCommand({ ping: 1 }).ok" | grep -q "1"; then
+                echo "MongoDB is ready"
+                break
+              fi
+              sleep 1
+            done
+
+            echo "Running tests with CI Mongo settings..."
+            export MONGO_URI="mongodb://localhost:27017"
+            export MONGO_DATABASE="pixology_test"
+
+            mvn -B test
+          '''
         }
       }
       post {
         always {
+          sh 'docker rm -f pixology-mongo >/dev/null 2>&1 || true'
           junit allowEmptyResults: true, testResults: 'backend/backend/target/surefire-reports/*.xml'
         }
       }
