@@ -23,20 +23,21 @@ pipeline {
           sh '''
             set -e
 
-            echo "Starting MongoDB container..."
-            docker rm -f pixology-mongo >/dev/null 2>&1 || true
-            docker run -d --name pixology-mongo -p 27017:27017 mongo:7
+            NAME="pixology-mongo-${BUILD_TAG//[^a-zA-Z0-9_.-]/-}"
 
-            echo "Waiting for MongoDB to be ready..."
+            echo "Starting MongoDB container: $NAME"
+            docker rm -f "$NAME" >/dev/null 2>&1 || true
+            docker run -d --name "$NAME" -p 27017:27017 mongo:7
+
+            echo "Waiting for MongoDB..."
             for i in $(seq 1 30); do
-              if docker exec pixology-mongo mongosh --quiet --eval "db.runCommand({ ping: 1 }).ok" | grep -q "1"; then
-                echo "MongoDB is ready"
+              if docker exec "$NAME" mongosh --quiet --eval "db.runCommand({ ping: 1 }).ok" | grep -q "1"; then
+                echo "MongoDB ready"
                 break
               fi
               sleep 1
             done
 
-            echo "Running tests with CI Mongo settings..."
             export MONGO_URI="mongodb://localhost:27017"
             export MONGO_DATABASE="pixology_test"
 
@@ -46,7 +47,10 @@ pipeline {
       }
       post {
         always {
-          sh 'docker rm -f pixology-mongo >/dev/null 2>&1 || true'
+          sh '''
+            NAME="pixology-mongo-${BUILD_TAG//[^a-zA-Z0-9_.-]/-}"
+            docker rm -f "$NAME" >/dev/null 2>&1 || true
+          '''
           junit allowEmptyResults: true, testResults: 'backend/backend/target/surefire-reports/*.xml'
         }
       }
