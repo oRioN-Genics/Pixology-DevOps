@@ -94,7 +94,15 @@ pipeline {
     stage('Frontend - Install') {
       steps {
         dir('frontend') {
-          sh 'npm ci'
+          sh '''#!/bin/bash
+            set -euo pipefail
+            docker run --rm \
+              -u $(id -u):$(id -g) \
+              -v "$PWD":/workspace \
+              -w /workspace \
+              node:20-bullseye \
+              bash -lc "node -v && npm -v && npm ci"
+          '''
         }
       }
     }
@@ -102,7 +110,15 @@ pipeline {
     stage('Frontend - Lint') {
       steps {
         dir('frontend') {
-          sh 'npm run lint'
+          sh '''#!/bin/bash
+            set -euo pipefail
+            docker run --rm \
+              -u $(id -u):$(id -g) \
+              -v "$PWD":/workspace \
+              -w /workspace \
+              node:20-bullseye \
+              bash -lc "npm run lint"
+          '''
         }
       }
     }
@@ -110,7 +126,15 @@ pipeline {
     stage('Frontend - Build') {
       steps {
         dir('frontend') {
-          sh 'npm run build'
+          sh '''#!/bin/bash
+            set -euo pipefail
+            docker run --rm \
+              -u $(id -u):$(id -g) \
+              -v "$PWD":/workspace \
+              -w /workspace \
+              node:20-bullseye \
+              bash -lc "npm run build"
+          '''
         }
       }
       post {
@@ -119,11 +143,3 @@ pipeline {
         }
       }
     }
-  }
-
-  post {
-    always {
-      cleanWs()
-    }
-  }
-}
