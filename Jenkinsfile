@@ -20,16 +20,20 @@ pipeline {
     stage('Backend - Test') {
       steps {
         dir('backend/backend') {
-          sh(label: 'Backend tests with Mongo', script: '''
-            # Generate a clean name using standard tools
+          sh(label: 'Backend tests with Mongo (Docker network)', script: '''
+            set -e
+
             CLEAN_TAG=$(echo "${BUILD_TAG}" | tr -cs 'a-zA-Z0-9_.-' '-')
             NAME="pixology-mongo-${CLEAN_TAG}"
+            NET="pixology-ci-${CLEAN_TAG}"
+
+            echo "Creating network: $NET"
+            docker network create "$NET" >/dev/null 2>&1 || true
 
             echo "Starting MongoDB container: $NAME"
             docker rm -f "$NAME" >/dev/null 2>&1 || true
-            docker run -d --name "$NAME" -p 27017:27017 mongo:7
+            docker run -d --name "$NAME" --network "$NET" mongo:7
 
-            # Wait for Mongo
             echo "Waiting for MongoDB..."
             attempt=0
             until docker exec "$NAME" mongosh --quiet --eval "db.runCommand({ ping: 1 }).ok" | grep -q "1" || [ $attempt -eq 30 ]; do
@@ -37,7 +41,8 @@ pipeline {
               attempt=$((attempt + 1))
             done
 
-            export MONGO_URI="mongodb://localhost:27017"
+            # IMPORTANT: use container name, not localhost
+            export MONGO_URI="mongodb://$NAME:27017/pixology_test"
             export MONGO_DATABASE="pixology_test"
 
             mvn -B test
@@ -46,8 +51,14 @@ pipeline {
       }
       post {
         always {
-          // Use the same logic here or just kill by name pattern
-          sh 'docker ps -a -q --filter "name=pixology-mongo-" | xargs -r docker rm -f'
+          sh '''
+            CLEAN_TAG=$(echo "${BUILD_TAG}" | tr -cs 'a-zA-Z0-9_.-' '-')
+            NAME="pixology-mongo-${CLEAN_TAG}"
+            NET="pixology-ci-${CLEAN_TAG}"
+
+            docker rm -f "$NAME" >/dev/null 2>&1 || true
+            docker network rm "$NET" >/dev/null 2>&1 || true
+          '''
           junit allowEmptyResults: true, testResults: 'backend/backend/target/surefire-reports/*.xml'
         }
       }
