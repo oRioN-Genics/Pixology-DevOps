@@ -98,10 +98,12 @@ pipeline {
             set -euo pipefail
             docker run --rm \
               -u $(id -u):$(id -g) \
+              -e HOME=/workspace \
+              -e npm_config_cache=/workspace/.npm \
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
-              bash -lc "node -v && npm -v && npm ci"
+              bash -lc "mkdir -p /workspace/.npm && node -v && npm -v && npm ci"
           '''
         }
       }
@@ -114,10 +116,12 @@ pipeline {
             set -euo pipefail
             docker run --rm \
               -u $(id -u):$(id -g) \
+              -e HOME=/workspace \
+              -e npm_config_cache=/workspace/.npm \
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
-              bash -lc "npm run lint"
+              bash -lc "mkdir -p /workspace/.npm && npm run lint"
           '''
         }
       }
@@ -130,10 +134,12 @@ pipeline {
             set -euo pipefail
             docker run --rm \
               -u $(id -u):$(id -g) \
+              -e HOME=/workspace \
+              -e npm_config_cache=/workspace/.npm \
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
-              bash -lc "npm run build"
+              bash -lc "mkdir -p /workspace/.npm && npm run build"
           '''
         }
       }
