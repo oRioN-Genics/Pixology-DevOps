@@ -21,7 +21,7 @@ pipeline {
       steps {
         dir('backend/backend') {
           sh(label: 'Backend tests with Mongo (Docker network)', script: '''
-            set -e
+            set -euo pipefail
 
             CLEAN_TAG=$(echo "${BUILD_TAG}" | tr -cs 'a-zA-Z0-9_.-' '-')
             NAME="pixology-mongo-${CLEAN_TAG}"
@@ -32,7 +32,7 @@ pipeline {
 
             echo "Starting MongoDB container: $NAME"
             docker rm -f "$NAME" >/dev/null 2>&1 || true
-            docker run -d --name "$NAME" --network "$NET" mongo:7
+            docker run -d --name "$NAME" --network "$NET" mongo:7 >/dev/null
 
             echo "Waiting for MongoDB..."
             attempt=0
@@ -41,11 +41,21 @@ pipeline {
               attempt=$((attempt + 1))
             done
 
-            # IMPORTANT: use container name, not localhost
-            export MONGO_URI="mongodb://$NAME:27017/pixology_test"
-            export MONGO_DATABASE="pixology_test"
+            if [ $attempt -eq 30 ]; then
+              echo "MongoDB did not become ready in time"
+              docker logs "$NAME" || true
+              exit 1
+            fi
 
-            mvn -B test
+            # Run Maven INSIDE Docker on the SAME network so $NAME resolves
+            docker run --rm \
+              --network "$NET" \
+              -e MONGO_URI="mongodb://$NAME:27017/pixology_test" \
+              -e MONGO_DATABASE="pixology_test" \
+              -v "$PWD":/workspace \
+              -w /workspace \
+              maven:3.9-eclipse-temurin-21 \
+              mvn -B test
           ''')
         }
       }
