@@ -58,7 +58,7 @@ const SignUpFormCard = () => {
       });
 
       if (res.ok) {
-        const data = await res.json();
+        // const data = await res.json();
         setSuccessMsg("Account created! Redirecting to sign in…");
         // small delay so users see the success text
         setTimeout(() => navigate("/login"), 800);
@@ -74,6 +74,7 @@ const SignUpFormCard = () => {
         }
       }
     } catch (err) {
+      console.error("Signup failed:", err);
       setErrorMsg("Network error. Is the backend running on :8080?");
     } finally {
       setLoading(false);

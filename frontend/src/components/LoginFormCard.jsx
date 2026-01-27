@@ -70,7 +70,8 @@ const LoginFormCard = () => {
           setErrorMsg(text || "Something went wrong. Please try again.");
         }
       }
-    } catch (_) {
+    } catch (err) {
+      console.error("Login failed:", err);
       setErrorMsg("Network error. Is the backend running on :8080?");
     } finally {
       setLoading(false);
