@@ -20,8 +20,7 @@ pipeline {
     stage('Backend - Test') {
       steps {
         dir('backend/backend') {
-          sh 'chmod +x mvnw'
-          sh './mvnw -B test'
+          sh 'mvn -B test'
         }
       }
       post {
@@ -34,7 +33,7 @@ pipeline {
     stage('Backend - Package') {
       steps {
         dir('backend/backend') {
-          sh './mvnw -B -DskipTests package'
+          sh 'mvn -B -DskipTests package'
         }
       }
       post {
