@@ -25,8 +25,6 @@ const TimelinePanel = ({
 
   // preview props (provided from CanvasBoard)
   previewFrames = [],
-  previewWidth = 128,
-  previewHeight = 128,
   onRegisterPreviewAPI,
 }) => {
   const [anims, setAnims] = useState([]);
@@ -525,48 +523,6 @@ const TimelinePanel = ({
   }, [isPlaying, fps]);
 
   useEffect(() => stopPlayback, []);
-
-  // --------- transport over unified sequence (kept compatible with your code) ---------
-  const goFirst = () => {
-    const order = ensureSequence();
-    if (!order.length) return;
-    playIdxRef.current = 0;
-    const pos = order[0];
-    const gi = unifiedSeqRef.current.entries[pos]?.gi ?? 0;
-    previewRef.current?.seek?.(gi);
-    previewRef.current?.redraw?.();
-    updatePlayingHighlight(playIdxRef.current);
-  };
-  const goPrev = () => {
-    const order = ensureSequence();
-    if (!order.length) return;
-    playIdxRef.current = (playIdxRef.current - 1 + order.length) % order.length;
-    const pos = order[playIdxRef.current];
-    const gi = unifiedSeqRef.current.entries[pos]?.gi ?? 0;
-    previewRef.current?.seek?.(gi);
-    previewRef.current?.redraw?.();
-    updatePlayingHighlight(playIdxRef.current);
-  };
-  const goNext = () => {
-    const order = ensureSequence();
-    if (!order.length) return;
-    playIdxRef.current = (playIdxRef.current + 1) % order.length;
-    const pos = order[playIdxRef.current];
-    const gi = unifiedSeqRef.current.entries[pos]?.gi ?? 0;
-    previewRef.current?.seek?.(gi);
-    previewRef.current?.redraw?.();
-    updatePlayingHighlight(playIdxRef.current);
-  };
-  const goLast = () => {
-    const order = ensureSequence();
-    if (!order.length) return;
-    playIdxRef.current = order.length - 1;
-    const pos = order[order.length - 1];
-    const gi = unifiedSeqRef.current.entries[pos]?.gi ?? 0;
-    previewRef.current?.seek?.(gi);
-    previewRef.current?.redraw?.();
-    updatePlayingHighlight(playIdxRef.current);
-  };
 
   // --------- NEW: animation-transport (wired to buttons) ---------
   const selectAnimByIndex = (index) => {

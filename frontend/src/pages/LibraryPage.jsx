@@ -186,7 +186,7 @@ const LibraryPage = () => {
                 selected={selectedId === p.id}
                 onClick={setSelectedId}
                 onDoubleClick={() => openProject(p)}
-                onContextMenu={(id, e) => console.log("Context menu:", id)}
+                onContextMenu={(id) => console.log("Context menu:", id)}
                 onToggleFavorite={toggleFavorite}
                 onDelete={confirmDelete}
               />

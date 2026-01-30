@@ -21,7 +21,7 @@ const HeroSection = () => {
 
   const isAuthed = !!readUser();
 
-  const requireAuth = (action) => {
+  const requireAuth = () => {
     if (!isAuthed) {
       setToastMsg("Please log in to continue");
       // Navigate to login after short delay so toast is visible

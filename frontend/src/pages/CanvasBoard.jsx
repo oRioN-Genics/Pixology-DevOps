@@ -729,7 +729,7 @@ const CanvasBoard = () => {
   const triggerDownload = (dataUrl, fmt, extra = "") => {
     if (!dataUrl) return setToastMsg("Failed to export image.");
     const safeName =
-      (projectName || "pixology").replace(/[^\w\.-]+/g, "_").slice(0, 60) ||
+      (projectName || "pixology").replace(/[^\w.-]+/g, "_").slice(0, 60) ||
       "pixology";
     const ext = fmt === "jpeg" ? "jpg" : "png";
 

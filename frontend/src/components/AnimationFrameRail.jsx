@@ -141,8 +141,6 @@ const AnimationFrameRail = ({
 
   // ------- Layer API exposed to parent (with history) -------
   useEffect(() => {
-    const getActiveFrame = (arr) => arr[activeIndexRef.current];
-
     const withLayerHistory = (mutator) => {
       setFrames((prev) => {
         const idx = activeIndexRef.current;

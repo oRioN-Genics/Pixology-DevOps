@@ -316,15 +316,6 @@ const PixelGridCanvas = ({
     return () => el.removeEventListener("wheel", handleWheel);
   }, [isPointerInside]);
 
-  const cursorStyle =
-    selectedTool === "hand"
-      ? isDragging
-        ? "grabbing"
-        : "grab"
-      : isDragging && dragSource === "middle"
-      ? "grabbing"
-      : "crosshair";
-
   // ---- diff writers ----
   const setPixelImmediateWithDiff = (layerId, row, col, next) => {
     const prev = buffers.get(layerId)?.[row]?.[col] ?? null;
