@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import NavBar from "../components/NavBar";
 import AssetTile from "../components/AssetTile";
 import Toast from "../components/Toast";
-// import { api } from "../api";
 const API = import.meta.env.VITE_API_URL || "/api";
 const api = (path, options = {}) => fetch(`${API}${path}`, options);
 

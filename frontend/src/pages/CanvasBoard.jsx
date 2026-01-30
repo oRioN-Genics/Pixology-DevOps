@@ -11,7 +11,9 @@ import { assets } from "../assets";
 import CanvasNotch from "../components/CanvasNotch";
 import AnimationFrameRail from "../components/AnimationFrameRail";
 import TimelinePanel from "../components/TimelinePanel";
-import { api } from "../api";
+
+const API = import.meta.env.VITE_API_URL || "/api";
+const api = (path, options = {}) => fetch(`${API}${path}`, options);
 
 const MAX_HISTORY = 100;
 
