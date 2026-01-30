@@ -89,35 +89,69 @@ pipeline {
       }
     }
 
+//     stage('Frontend - Install') {
+//       steps {
+//         dir('frontend') {
+//           sh '''#!/bin/bash
+//             set -euo pipefail
+//             docker run --rm \
+//               -u $(id -u):$(id -g) \
+//               -e HOME=/workspace \
+//               -e npm_config_cache=/workspace/.npm \
+//               -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
+//               -v "$PWD":/workspace \
+//               -w /workspace \
+//               node:20-bullseye \
+//               bash -lc "
+//                 set -euo pipefail
+//                 mkdir -p /workspace/.npm
+
+//                 cat > /workspace/.npmrc <<'EOF'
+// fetch-retries=5
+// fetch-retry-mintimeout=20000
+// fetch-retry-maxtimeout=120000
+// fetch-timeout=600000
+// EOF
+
+//                 node -v
+//                 npm -v
+//                 npm ci
+//               "
+//           '''
+//         }
+//       }
+//     }
+
     stage('Frontend - Install') {
       steps {
-        dir('frontend') {
-          sh '''#!/bin/bash
-            set -euo pipefail
-            docker run --rm \
-              -u $(id -u):$(id -g) \
-              -e HOME=/workspace \
-              -e npm_config_cache=/workspace/.npm \
-              -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
-              -v "$PWD":/workspace \
-              -w /workspace \
-              node:20-bullseye \
-              bash -lc "
-                set -euo pipefail
-                mkdir -p /workspace/.npm
+        retry(3) {
+          dir('frontend') {
+            sh '''#!/bin/bash
+              set -euo pipefail
+              docker run --rm \
+                -u $(id -u):$(id -g) \
+                -e HOME=/workspace \
+                -e npm_config_cache=/workspace/.npm \
+                -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
+                -v "$PWD":/workspace \
+                -w /workspace \
+                node:20-bullseye \
+                bash -lc "
+                  set -euo pipefail
+                  mkdir -p /workspace/.npm
 
-                cat > /workspace/.npmrc <<'EOF'
+                  cat > /workspace/.npmrc <<'EOF'
 fetch-retries=5
 fetch-retry-mintimeout=20000
 fetch-retry-maxtimeout=120000
 fetch-timeout=600000
 EOF
-
-                node -v
-                npm -v
-                npm ci
-              "
-          '''
+                  node -v
+                  npm -v
+                  npm ci
+                "
+            '''
+          }
         }
       }
     }
