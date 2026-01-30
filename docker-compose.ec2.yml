@@ -5,7 +5,8 @@ services:
     restart: unless-stopped
 
   backend:
-    image: pixology-backend:ec2
+    # image: pixology-backend:ec2
+    image: ghcr.io/orion-genics/pixology-backend:latest
     container_name: pixology-backend
     restart: unless-stopped
     environment:
@@ -15,7 +16,8 @@ services:
       - mongo
 
   frontend:
-    image: pixology-frontend:ec2
+    # image: pixology-frontend:ec2
+    image: ghcr.io/orion-genics/pixology-frontend:latest
     container_name: pixology-frontend
     restart: unless-stopped
     environment:
