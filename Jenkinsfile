@@ -22,19 +22,18 @@ pipeline {
         dir('backend/backend') {
           sh(label: 'Backend tests with Mongo (Docker network)', script: '''#!/bin/bash
             set -euo pipefail
-            
-            # Generate a clean name for Docker resources
+
             CLEAN_TAG=$(echo "${BUILD_TAG}" | tr -cs 'a-zA-Z0-9_.-' '-')
             NAME="pixology-mongo-${CLEAN_TAG}"
             NET="pixology-ci-${CLEAN_TAG}"
-            
+
             echo "Creating network: $NET"
             docker network create "$NET" >/dev/null 2>&1 || true
-            
+
             echo "Starting MongoDB container: $NAME"
             docker rm -f "$NAME" >/dev/null 2>&1 || true
             docker run -d --name "$NAME" --network "$NET" mongo:7
-            
+
             echo "Waiting for MongoDB to be ready..."
             attempt=0
             until docker exec "$NAME" mongosh --quiet --eval "db.runCommand({ ping: 1 }).ok" | grep -q "1" || [ $attempt -eq 30 ]; do
@@ -49,7 +48,6 @@ pipeline {
             fi
 
             echo "Running Maven tests inside Docker container..."
-            # Using -u $(id -u) ensures files created in /target belong to Jenkins user, not root
             docker run --rm \
               --network "$NET" \
               -u $(id -u):$(id -g) \
@@ -100,17 +98,23 @@ pipeline {
               -u $(id -u):$(id -g) \
               -e HOME=/workspace \
               -e npm_config_cache=/workspace/.npm \
+              -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
               bash -lc "
-                mkdir -p /workspace/.npm &&
-                npm config set cache /workspace/.npm --global &&
-                npm config set fetch-retries 5 --global &&
-                npm config set fetch-retry-mintimeout 20000 --global &&
-                npm config set fetch-retry-maxtimeout 120000 --global &&
-                npm config set fetch-timeout 600000 --global &&
-                node -v && npm -v &&
+                set -euo pipefail
+                mkdir -p /workspace/.npm
+
+                cat > /workspace/.npmrc <<'EOF'
+fetch-retries=5
+fetch-retry-mintimeout=20000
+fetch-retry-maxtimeout=120000
+fetch-timeout=600000
+EOF
+
+                node -v
+                npm -v
                 npm ci
               "
           '''
@@ -127,10 +131,16 @@ pipeline {
               -u $(id -u):$(id -g) \
               -e HOME=/workspace \
               -e npm_config_cache=/workspace/.npm \
+              -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
-              bash -lc "mkdir -p /workspace/.npm && npm run lint"
+              bash -lc "
+                set -euo pipefail
+                mkdir -p /workspace/.npm
+                [ -f /workspace/.npmrc ] || true
+                npm run lint
+              "
           '''
         }
       }
@@ -145,10 +155,16 @@ pipeline {
               -u $(id -u):$(id -g) \
               -e HOME=/workspace \
               -e npm_config_cache=/workspace/.npm \
+              -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
-              bash -lc "mkdir -p /workspace/.npm && npm run build"
+              bash -lc "
+                set -euo pipefail
+                mkdir -p /workspace/.npm
+                [ -f /workspace/.npmrc ] || true
+                npm run build
+              "
           '''
         }
       }
@@ -168,7 +184,6 @@ pipeline {
 
             EC2_HOST="65.0.4.209"
             APP_DIR="/home/ubuntu/pixology/repo"
-
             SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
             ssh $SSH_OPTS ubuntu@$EC2_HOST "
