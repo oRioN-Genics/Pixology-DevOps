@@ -162,7 +162,12 @@ pipeline {
 
             SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
-            ssh $SSH_OPTS ubuntu@$EC2_HOST "cd $APP_DIR && git pull && docker compose -f docker-compose.ec2.yml up -d --build"
+            ssh $SSH_OPTS ubuntu@$EC2_HOST "
+              cd $APP_DIR &&
+              git pull &&
+              docker compose -f docker-compose.ec2.yml pull &&
+              docker compose -f docker-compose.ec2.yml up -d
+            "
           '''
         }
       }
