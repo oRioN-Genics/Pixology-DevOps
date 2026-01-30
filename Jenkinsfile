@@ -149,6 +149,24 @@ pipeline {
         }
       }
     }
+
+    stage('Deploy to EC2') {
+      when { branch 'main' }
+      steps {
+        sshagent(credentials: ['pixology-ec2-ssh']) {
+          sh '''#!/bin/bash
+            set -euo pipefail
+
+            EC2_HOST="65.0.4.209"
+            APP_DIR="/home/ubuntu/pixology/repo"
+
+            SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+            ssh $SSH_OPTS ubuntu@$EC2_HOST "cd $APP_DIR && git pull && docker compose -f docker-compose.ec2.yml up -d --build"
+          '''
+        }
+      }
+    }
   }
 
   post {

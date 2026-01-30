@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: pixology-mongo
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend/backend
+      dockerfile: Dockerfile
+    image: pixology-backend:ec2
+    container_name: pixology-backend
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://pixology-mongo:27017/pixology
+      MONGO_DATABASE: pixology
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: pixology-frontend:ec2
+    container_name: pixology-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: "http://pixology-backend:8080"
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: pixology-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
