@@ -103,7 +103,16 @@ pipeline {
               -v "$PWD":/workspace \
               -w /workspace \
               node:20-bullseye \
-              bash -lc "mkdir -p /workspace/.npm && node -v && npm -v && npm ci"
+              bash -lc "
+                mkdir -p /workspace/.npm &&
+                npm config set cache /workspace/.npm --global &&
+                npm config set fetch-retries 5 --global &&
+                npm config set fetch-retry-mintimeout 20000 --global &&
+                npm config set fetch-retry-maxtimeout 120000 --global &&
+                npm config set fetch-timeout 600000 --global &&
+                node -v && npm -v &&
+                npm ci
+              "
           '''
         }
       }
