@@ -209,6 +209,26 @@ EOF
       }
     }
 
+    stage('Docker - Build & Push') {
+      steps {
+          script {
+              withCredentials([string(credentialsId: 'ghcr-creds', variable: 'GH_TOKEN')]) {
+                  sh "echo ${GH_TOKEN} | docker login ghcr.io -u ${GITHUB_USER} --password-stdin"
+              }
+              
+              dir('backend/backend') {
+                  sh "docker build -t ghcr.io/orion-genics/pixology-backend:latest ."
+                  sh "docker push ghcr.io/orion-genics/pixology-backend:latest"
+              }
+              
+              dir('frontend') {
+                  sh "docker build -t ghcr.io/orion-genics/pixology-frontend:latest ."
+                  sh "docker push ghcr.io/orion-genics/pixology-frontend:latest"
+              }
+          }
+      }
+    }
+
     stage('Deploy to EC2') {
       when { branch 'main' }
       steps {
