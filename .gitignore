@@ -12,3 +12,11 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+*.pem
+*id_rsa*
+*id_ed25519*
+pixology-ec2
+pixology-ec2.pub
+pixology_jenkins_ed25519
+pixology_jenkins_ed25519.pub
