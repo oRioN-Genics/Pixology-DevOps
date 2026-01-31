@@ -3,8 +3,9 @@ import BlueButton from "./BlueButton";
 import { assets } from "../assets";
 import { useNavigate } from "react-router-dom";
 // import { api } from "../api";
-const defaultBase = `${window.location.protocol}//${window.location.hostname}:8080`;
-const API = window.__API_URL__ || defaultBase;
+// const defaultBase = `${window.location.protocol}//${window.location.hostname}:8080`;
+// const API = window.__API_URL__ || defaultBase;
+const API = import.meta.env.VITE_API_URL || "/api";
 const api = (path, options = {}) => fetch(`${API}${path}`, options);
 
 
@@ -70,7 +71,8 @@ const LoginFormCard = () => {
           setErrorMsg(text || "Something went wrong. Please try again.");
         }
       }
-    } catch (_) {
+    } catch (err) {
+      console.error("Login failed:", err);
       setErrorMsg("Network error. Is the backend running on :8080?");
     } finally {
       setLoading(false);
