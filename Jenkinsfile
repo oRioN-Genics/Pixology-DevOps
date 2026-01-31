@@ -116,6 +116,7 @@ pipeline {
                                        usernameVariable: 'GH_USER', 
                                        passwordVariable: 'GH_TOKEN')]) {
             sh "echo ${GH_TOKEN} | docker login ${REGISTRY} -u ${GH_USER} --password-stdin"
+
           }
           
           dir('backend/backend') {
