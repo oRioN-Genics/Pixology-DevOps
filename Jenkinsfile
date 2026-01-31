@@ -9,6 +9,7 @@ pipeline {
   environment {
     CI = 'true'
     REGISTRY = "ghcr.io"
+    GITHUB_USER = 'oRioN-Genics' 
     BACKEND_IMAGE = "ghcr.io/orion-genics/pixology-backend"
     FRONTEND_IMAGE = "ghcr.io/orion-genics/pixology-frontend"
   }
@@ -23,26 +24,30 @@ pipeline {
     stage('Backend - Test') {
       steps {
         dir('backend/backend') {
-          sh(label: 'Backend tests with Mongo (Docker network)', script: '''#!/bin/bash
+          sh(label: 'Backend tests with Mongo', script: '''#!/bin/bash
             set -euo pipefail
             CLEAN_TAG=$(echo "${BUILD_TAG}" | tr -cs 'a-zA-Z0-9_.-' '-')
             NAME="pixology-mongo-${CLEAN_TAG}"
             NET="pixology-ci-${CLEAN_TAG}"
+
             docker network create "$NET" >/dev/null 2>&1 || true
             docker rm -f "$NAME" >/dev/null 2>&1 || true
             docker run -d --name "$NAME" --network "$NET" mongo:7
+
             attempt=0
             until docker exec "$NAME" mongosh --quiet --eval "db.runCommand({ ping: 1 }).ok" | grep -q "1" || [ $attempt -eq 30 ]; do
               sleep 2
               attempt=$((attempt + 1))
             done
+
             if [ $attempt -eq 30 ]; then exit 1; fi
+
             docker run --rm --network "$NET" -u $(id -u):$(id -g) \
               -e MONGO_URI="mongodb://$NAME:27017/pixology_test" \
               -e MONGO_DATABASE="pixology_test" -v "$PWD":/workspace \
               -v "$HOME/.m2":/var/maven/.m2 -e MAVEN_CONFIG=/var/maven/.m2 \
               -w /workspace maven:3.9-eclipse-temurin-21 mvn -Duser.home=/var/maven -B test
-          ''') [cite: 12, 13, 14, 15, 16, 17, 18, 19]
+          ''')
         }
       }
       post {
@@ -51,7 +56,7 @@ pipeline {
             CLEAN_TAG=$(echo "${BUILD_TAG}" | tr -cs 'a-zA-Z0-9_.-' '-')
             docker rm -f "pixology-mongo-${CLEAN_TAG}" >/dev/null 2>&1 || true
             docker network rm "pixology-ci-${CLEAN_TAG}" >/dev/null 2>&1 || true
-          ''') [cite: 20, 21, 22]
+          ''')
           junit allowEmptyResults: true, testResults: 'backend/backend/target/surefire-reports/*.xml'
         }
       }
@@ -60,12 +65,12 @@ pipeline {
     stage('Backend - Package') {
       steps {
         dir('backend/backend') {
-          sh 'mvn -B -DskipTests package' [cite: 12]
+          sh 'mvn -B -DskipTests package'
         }
       }
       post {
         success {
-          archiveArtifacts artifacts: 'backend/backend/target/*.jar', fingerprint: true, allowEmptyArchive: true [cite: 23]
+          archiveArtifacts artifacts: 'backend/backend/target/*.jar', fingerprint: true, allowEmptyArchive: true
         }
       }
     }
@@ -80,7 +85,7 @@ pipeline {
                 -e npm_config_cache=/workspace/.npm -e NPM_CONFIG_USERCONFIG=/workspace/.npmrc \
                 -v "$PWD":/workspace -w /workspace node:20-bullseye \
                 bash -lc "mkdir -p /workspace/.npm && npm ci"
-            ''' [cite: 27, 28, 29, 30, 31]
+            '''
           }
         }
       }
@@ -94,22 +99,21 @@ pipeline {
             docker run --rm -u $(id -u):$(id -g) -e HOME=/workspace \
               -v "$PWD":/workspace -w /workspace node:20-bullseye \
               bash -lc "npm run build"
-          ''' [cite: 35, 36, 37]
+          '''
         }
       }
       post {
         success {
-          archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true, allowEmptyArchive: true [cite: 38]
+          archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true, allowEmptyArchive: true
         }
       }
     }
 
     stage('Docker - Build & Push') {
-      when { branch 'main' }
       steps {
         script {
           withCredentials([string(credentialsId: 'ghcr-creds', variable: 'GH_TOKEN')]) {
-            sh "echo ${GH_TOKEN} | docker login ${REGISTRY} -u oRioN-Genics --password-stdin"
+            sh "echo ${GH_TOKEN} | docker login ${REGISTRY} -u ${GITHUB_USER} --password-stdin"
           }
           
           dir('backend/backend') {
@@ -124,26 +128,6 @@ pipeline {
             sh "docker push ${FRONTEND_IMAGE}:${BUILD_NUMBER}"
           }
         }
-      }
-    }
-
-    stage('Docker - Build & Push') {
-      steps {
-          script {
-              withCredentials([string(credentialsId: 'ghcr-creds', variable: 'GH_TOKEN')]) {
-                  sh "echo ${GH_TOKEN} | docker login ghcr.io -u ${GITHUB_USER} --password-stdin"
-              }
-              
-              dir('backend/backend') {
-                  sh "docker build -t ghcr.io/orion-genics/pixology-backend:latest ."
-                  sh "docker push ghcr.io/orion-genics/pixology-backend:latest"
-              }
-              
-              dir('frontend') {
-                  sh "docker build -t ghcr.io/orion-genics/pixology-frontend:latest ."
-                  sh "docker push ghcr.io/orion-genics/pixology-frontend:latest"
-              }
-          }
       }
     }
 
@@ -163,7 +147,7 @@ pipeline {
               docker compose -f docker-compose.ec2.yml pull &&
               docker compose -f docker-compose.ec2.yml up -d
             "
-          ''' [cite: 39, 40]
+          '''
         }
       }
     }
