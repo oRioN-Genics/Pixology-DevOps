@@ -1,4 +1,4 @@
-**
-!target/backend-0.0.1-SNAPSHOT.jar
-!Dockerfile
-!.env
+target/
+.git/
+.gitignore
+*.log
