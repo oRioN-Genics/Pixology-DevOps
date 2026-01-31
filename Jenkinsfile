@@ -116,19 +116,22 @@ pipeline {
                                        usernameVariable: 'GH_USER', 
                                        passwordVariable: 'GH_TOKEN')]) {
             sh "echo ${GH_TOKEN} | docker login ${REGISTRY} -u ${GH_USER} --password-stdin"
-
           }
           
           dir('backend/backend') {
             sh "docker build -t ${BACKEND_IMAGE}:latest -t ${BACKEND_IMAGE}:${BUILD_NUMBER} ."
-            sh "docker push ${BACKEND_IMAGE}:latest"
-            sh "docker push ${BACKEND_IMAGE}:${BUILD_NUMBER}"
+            retry(3) {
+              sh "docker push ${BACKEND_IMAGE}:latest"
+              sh "docker push ${BACKEND_IMAGE}:${BUILD_NUMBER}"
+            }
           }
 
           dir('frontend') {
             sh "docker build -t ${FRONTEND_IMAGE}:latest -t ${FRONTEND_IMAGE}:${BUILD_NUMBER} ."
-            sh "docker push ${FRONTEND_IMAGE}:latest"
-            sh "docker push ${FRONTEND_IMAGE}:${BUILD_NUMBER}"
+            retry(3) {
+              sh "docker push ${FRONTEND_IMAGE}:latest"
+              sh "docker push ${FRONTEND_IMAGE}:${BUILD_NUMBER}"
+            }
           }
         }
       }
