@@ -144,6 +144,22 @@ pipeline {
       }
     }
 
+    stage('Preflight - Can reach EC2 SSH?') {
+      when { branch 'main' }
+      steps {
+        sh '''#!/bin/bash
+          set -euxo pipefail
+          EC2_HOST="65.0.4.209"
+
+          echo "Testing TCP 22..."
+          timeout 5 bash -lc "cat < /dev/null > /dev/tcp/${EC2_HOST}/22" && echo "Port 22 reachable" || echo "Port 22 NOT reachable"
+
+          echo "Traceroute (first hops)..."
+          (command -v traceroute >/dev/null && traceroute -n -m 6 ${EC2_HOST}) || true
+        '''
+      }
+    }
+
     stage('Deploy to EC2') {
       when { branch 'main' }
       steps {
