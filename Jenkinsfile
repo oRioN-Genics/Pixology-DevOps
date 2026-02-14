@@ -97,14 +97,10 @@ pipeline {
           sh '''#!/bin/bash
             set -euo pipefail
             docker run --rm -u $(id -u):$(id -g) -e HOME=/workspace \
+              -e npm_config_cache=/workspace/.npm \
               -v "$PWD":/workspace -w /workspace node:20-bullseye \
-              bash -lc "npm run build"
+              bash -lc "rm -rf node_modules && npm ci && npm run build"
           '''
-        }
-      }
-      post {
-        success {
-          archiveArtifacts artifacts: 'frontend/dist/**', fingerprint: true, allowEmptyArchive: true
         }
       }
     }
