@@ -148,11 +148,12 @@ pipeline {
       when { branch 'main' }
       steps {
         sh '''#!/bin/bash
-          set -euxo pipefail
-          EC2_HOST="65.0.4.209"
+          set -euo pipefail
+          EC2_HOST="13.232.181.159"
 
           echo "Testing TCP 22..."
-          timeout 5 bash -lc "cat < /dev/null > /dev/tcp/${EC2_HOST}/22" && echo "Port 22 reachable" || echo "Port 22 NOT reachable"
+          timeout 5 bash -lc "cat < /dev/null > /dev/tcp/${EC2_HOST}/22"
+          echo "Port 22 reachable"
 
           echo "Traceroute (first hops)..."
           (command -v traceroute >/dev/null && traceroute -n -m 6 ${EC2_HOST}) || true
@@ -166,7 +167,7 @@ pipeline {
         sshagent(credentials: ['pixology-ec2-ssh']) {
           sh '''#!/bin/bash
             set -euo pipefail
-            EC2_HOST="65.0.4.209"
+            EC2_HOST="13.232.181.159"
             APP_DIR="/home/ubuntu/pixology/repo"
             SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
