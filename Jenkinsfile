@@ -148,11 +148,12 @@ pipeline {
       when { branch 'main' }
       steps {
         sh '''#!/bin/bash
-          set -euxo pipefail
+          set -euo pipefail
           EC2_HOST="13.232.181.159"
 
           echo "Testing TCP 22..."
-          timeout 5 bash -lc "cat < /dev/null > /dev/tcp/${EC2_HOST}/22" && echo "Port 22 reachable" || echo "Port 22 NOT reachable"
+          timeout 5 bash -lc "cat < /dev/null > /dev/tcp/${EC2_HOST}/22"
+          echo "Port 22 reachable"
 
           echo "Traceroute (first hops)..."
           (command -v traceroute >/dev/null && traceroute -n -m 6 ${EC2_HOST}) || true
