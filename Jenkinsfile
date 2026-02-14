@@ -137,6 +137,17 @@ pipeline {
       }
     }
 
+    stage('Debug - Jenkins Public IP') {
+      steps {
+        sh '''#!/bin/bash
+          set -euo pipefail
+          echo -n "Jenkins public IP: "
+          curl -s https://api.ipify.org
+          echo
+        '''
+      }
+    }
+
     stage('Deploy to EC2') {
       when { branch 'main' }
       steps {
