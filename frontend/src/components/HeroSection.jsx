@@ -82,7 +82,7 @@ const HeroSection = () => {
             style={{ fontFamily: "ChakraPetch" }}
           >
             <h1 className="text-3xl font-bold text-black mb-4 leading-tight text-center">
-              Create Pixel <br /> Perfect Game <br /> Assets: Test1
+              Create Pixel <br /> Perfect Game <br /> Assets
             </h1>
             <p className="text-black text-md text-center">
               Professional pixel art editor for game developers and artists.
